@@ -22,7 +22,6 @@ const messageHandler = (client) => {
 
     if (content.startsWith('!')) {
       const { roles } = member
-      console.log(process.env.COMMAND_ROLES.split(','))
       const id = Array.from(roles.cache.filter(role => process.env.COMMAND_ROLES.split(',').includes(role.id)).values())
 
       if (id.length > 0) {
