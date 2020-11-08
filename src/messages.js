@@ -22,7 +22,7 @@ const messageHandler = (client) => {
 
     if (content.startsWith('!')) {
       const { roles } = member
-      const id = Array.from(roles.cache.filter(role => role.id == process.env.COMMAND_ROLES).values())
+      const id = Array.from(roles.cache.filter(role => role.id == process.env.COMMAND_ROLES.split(',')).values())
 
       if (id.length > 0) {
         let commandPhrase = content.slice(1)
