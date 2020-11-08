@@ -29,7 +29,7 @@ const messageHandler = (client) => {
         commandPhrase = commandPhrase.split(' ')
         const command = commandPhrase[0] + ' ' + commandPhrase[1]
         const user = message.mentions.members.first()
-  
+
         try {
           const existingCommands = await Command.find({guild: guild.id}).exec()
 
@@ -40,7 +40,7 @@ const messageHandler = (client) => {
               if (com.removeRoles.length > 0) removeRoles(user, com.removeRoles)
               if (com.botResponse !== '')  {
                 let response = com.botResponse
-                response = response.replace("<user>", `<@${member.id}>`)
+                response = response.replace("<user>", `<@${user.id}>`)
                 message.channel.send(response)
               }
             }
