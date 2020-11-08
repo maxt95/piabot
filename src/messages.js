@@ -30,16 +30,24 @@ const messageHandler = (client) => {
         const command = commandPhrase[0] + ' ' + commandPhrase[1]
         const user = message.mentions.members.first()
   
-        const existingCommands = await Command.find({guild: guild.id}).exec()
+        try {
+          const existingCommands = await Command.find({guild: guild.id}).exec()
 
-        existingCommands.forEach((com) => {
-          if(command === com.command) {
-            if (com.deletable === true) message.delete()
-            if (com.addRoles.length > 0) addRoles(user, com.addRoles)
-            if (com.removeRoles.length > 0) removeRoles(user, com.removeRoles)
-            if (com.botResponse !== '')  message.channel.send(com.botResponse)
-          }
-        })
+          existingCommands.forEach((com) => {
+            if(command === com.command) {
+              if (com.deletable === true) message.delete()
+              if (com.addRoles.length > 0) addRoles(user, com.addRoles)
+              if (com.removeRoles.length > 0) removeRoles(user, com.removeRoles)
+              if (com.botResponse !== '')  {
+                let response = com.botResponse
+                response = response.replace("<user>", `<@${member.id}>`)
+                message.channel.send(response)
+              }
+            }
+          })
+        } catch(error) {
+          console.log(error)
+        }
       }    
     }  
   })
