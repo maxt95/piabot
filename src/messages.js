@@ -1,3 +1,4 @@
+import { Command } from './db/schema.js'
 
 const addRoles = async (user, roles) => {
   try {
@@ -16,8 +17,8 @@ const removeRoles = async (user, roles) => {
 }
 
 const messageHandler = (client) => {
-  client.on('message', message => {
-    const { content, member } = message
+  client.on('message', async (message) => {
+    const { content, member, guild } = message
 
     if (content.startsWith('!')) {
       const { roles } = member
@@ -26,37 +27,22 @@ const messageHandler = (client) => {
       if (id.length > 0) {
         let commandPhrase = content.slice(1)
         commandPhrase = commandPhrase.split(' ')
-        const command = commandPhrase[0]
+        const command = commandPhrase[0] + ' ' + commandPhrase[1]
         const user = message.mentions.members.first()
   
-        console.log(command, commandPhrase)
-        if(command === 'approve' && commandPhrase.length > 1) {
-          message.delete()
+        const existingCommands = await Command.find({guild: guild.id}).exec()
 
-          let approveMessage = true
-          if(commandPhrase[1] === 'c') {
-            addRoles(user, ['500630639729573903'])
-            removeRoles(user, ['480748997846237194'])
+        existingCommands.forEach((com) => {
+          if(command === com.command) {
+            if (com.deletable === true) message.delete()
+            if (com.addRoles.length > 0) addRoles(user, com.addRoles)
+            if (com.removeRoles.length > 0) removeRoles(user, com.removeRoles)
+            if (com.botResponse !== '')  message.channel.send(com.botResponse)
           }
-          else if(commandPhrase[1] === 'lo') {
-            addRoles(user, ['480748578008989697', '480749987928735745'])
-            removeRoles(user, ['480748997846237194'])
-          }
-          else if(commandPhrase[1] === 'lc') {
-            addRoles(user, ['480748578008989697', '480750000419373057'])
-            removeRoles(user, ['480748997846237194'])
-          }
-          else {
-            // dm user and say oops wrong command?
-            approveMessage = false
-          }
-          // send message if approveMessage
-          if(approveMessage) message.channel.send('This is a response to your command')
-        }
+        })
       }    
     }  
   })
 }
-
 
 export default messageHandler
