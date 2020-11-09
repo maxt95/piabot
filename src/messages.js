@@ -2,6 +2,7 @@ import { Command } from './db/schema.js'
 
 const addRoles = async (user, roles) => {
   try {
+    console.log('adding roles: ', roles)
     await user.roles.add(roles)
   } catch(error) {
     console.log(error)
