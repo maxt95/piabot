@@ -29,12 +29,24 @@ const messageHandler = (client) => {
           existingCommands.forEach((com) => {
             if(command === com.command) {
               if (com.deletable === true) message.delete()
-              const existingRoles = Array.from(user.roles.cache.filter(role => !role.id.includes(com.removeRoles)).values())
-              setRoles(user, existingRoles, com.addRoles)
+
+              if(com.removeRoles.length > 0 || com.addRoles.length > 0) {
+                const existingRoles = Array.from(user.roles.cache.filter(role => !role.id.includes(com.removeRoles)).values())
+                setRoles(user, existingRoles, com.addRoles)
+              }
+
               if (com.botResponse !== '')  {
                 let response = com.botResponse
                 response = response.replace("<user>", `<@${user.id}>`)
                 message.channel.send(response)
+              }
+
+              if(com.command === 'flip') {
+                if(Math.random() >= 0.5) {
+                  message.channel.send('Heads')
+                } else {
+                  message.channel.send('Tails')
+                }
               }
             }
           })
