@@ -20,7 +20,13 @@ const messageHandler = (client) => {
       if (id.length > 0) {
         let commandPhrase = content.slice(1)
         commandPhrase = commandPhrase.split(' ')
-        const command = commandPhrase[0] + ' ' + commandPhrase[1]
+        let command 
+        if (commandPhrase.length > 1) {
+          command = commandPhrase[0] + ' ' + commandPhrase[1]
+        } else 
+        {
+          command = commandPhrase[0]
+        }
         const user = message.mentions.members.first()
         
         try {
@@ -43,15 +49,25 @@ const messageHandler = (client) => {
 
               if(com.command === 'flip') {
                 if(Math.random() >= 0.5) {
-                  message.channel.send('Heads')
+                  message.channel.send(`<@${member.id}> flipped Heads`) 
                 } else {
-                  message.channel.send('Tails')
+                  message.channel.send(`<@${member.id}> flipped Tails`)
                 }
               }
             }
           })
         } catch(error) {
           console.log(error)
+        }
+      } else {
+        let command = content.slice(1)
+        if(command === 'flip') {
+          message.delete()
+          if(Math.random() >= 0.5) { 
+            message.channel.send(`<@${member.id}> flipped Heads`) 
+          } else {
+            message.channel.send(`<@${member.id}> flipped Tails`)
+          }
         }
       }    
     }  
