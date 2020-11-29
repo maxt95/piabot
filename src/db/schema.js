@@ -21,4 +21,36 @@ const commandSchema = new mongoose.Schema({
   }
 })
 
+const ticketSchema = new mongoose.Schema({
+  guild: {
+    type: String,
+  },
+  channelId: {
+    type: String,
+  },
+  messageId: {
+    type: String,
+  },
+  reactionId: {
+    type: String,
+  },
+  categoryChannelId: {
+    type: String,
+  },
+  ticketCount: {
+    type: Number,
+  },
+  initialBotMessage: {
+    type: String,
+  },
+  activeMemberTickets: {
+    type: Array,
+  },
+  logChannel: {
+    type: String,
+  }
+})
+
+export const Ticket = mongoose.model('Ticket', ticketSchema)
+
 export const Command = mongoose.model('Command', commandSchema)
