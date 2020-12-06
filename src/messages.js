@@ -121,7 +121,7 @@ const messageHandler = (client) => {
             tickets.forEach(async (ticket) => {
               if(ticket.guild === guild.id) {
                 updatedMemberList = ticket.activeMemberTickets.filter(m => {
-                  return m.userId !== member.id
+                  return m.channelId !== message.channel.id
                 })
                 await Ticket.findOneAndUpdate({_id: ticket.id}, {activeMemberTickets: updatedMemberList}).exec()
                 try {
