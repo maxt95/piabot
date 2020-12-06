@@ -30,14 +30,9 @@ const ticketHandler = async (client) => {
                 const ticketGuildChannel = await guild.channels.create(`ticket-${num}`, {
                   reason: 'Ticket Creation',
                   parent: ticket.categoryChannelId,
-                  permissionOverwrites: [
-                    {
-                      id: user.id,
-                      allow: ['VIEW_CHANNEL', 'SEND_MESSAGES']
-                    }
-                  ]
                 })
                 await ticketGuildChannel.lockPermissions()
+                await ticketGuildChannel.updateOverwrite(user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true })
                 const ticketChannel = await ticketGuildChannel.fetch()
   
                 let array = ticket.activeMemberTickets
