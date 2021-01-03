@@ -51,6 +51,17 @@ const ticketSchema = new mongoose.Schema({
   }
 })
 
+const userJoinSchema = new mongoose.Schema({
+  messageId: {
+    type: String,
+  },
+  timestamp: {
+    type: String,
+  }
+})
+
 export const Ticket = mongoose.model('Ticket', ticketSchema)
 
 export const Command = mongoose.model('Command', commandSchema)
+
+export const userJoinSchema = mongoose.model('UserJoin', userJoinSchema)

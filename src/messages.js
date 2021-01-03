@@ -132,6 +132,12 @@ const messageHandler = (client) => {
               }
             })
    
+          } else if (command === 'train') {
+            // creating dataset for predicting when a user joins the server
+            // get channel id
+            // get all messages in channel
+            // save message id and timestamp to db
+            // output console training complete
           } else {
             
           }
