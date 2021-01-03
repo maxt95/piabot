@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/maxt95/piabot#readme",
   "dependencies": {
+    "@tensorflow/tfjs-node": "^2.8.2",
     "discord.js": "^12.1.1",
     "dotenv": "^8.2.0",
     "moment": "^2.29.1",
