@@ -1,6 +1,5 @@
 import { MessageEmbed } from 'discord.js'
-import { Command, Ticket } from './db/schema.js'
-import moment from 'moment'
+import { Command, Ticket, Guild } from './db/schema.js'
 
 const setRoles = async (user, existingRoles, newRoles) => {
   const roles = existingRoles.concat(newRoles)
@@ -11,11 +10,47 @@ const setRoles = async (user, existingRoles, newRoles) => {
   }
 }
 
+const getUser = async (guildId, userId) => {
+  const guild = await Guild.findOne({ guildId: guildId }).exec()
+  const user = await guild.users.filter((user) => {
+    return user.userId === userId
+  })[0]
+  return user
+}
+
+const calculateExperience = async (message) => {
+  const { content, member, guild } = message
+  const words = content.split(' ')
+  const guildExperience = await Guild.findOne({guildId: guild.id }).exec()
+  const config = guildExperience.config
+  
+  const experience = words.length * config.experienceValue
+  const currency = words.length * config.currencyValue
+
+  const user = await guildExperience.users.filter((user) => {
+    return user.userId === member.id
+  })
+
+  if (user.length === 0) {
+    guildExperience.users.push({
+      guildId: guild.id,
+      userId: member.id,
+      experience: experience,
+      currency: currency,
+    })
+    await guildExperience.save()
+  } else {
+    user[0].experience += experience
+    user[0].currency += currency
+    await guildExperience.save()
+  }
+}
+
 const messageHandler = (client) => {
   //TODO CACHE THE USER ROLES
   client.on('message', async (message) => {
     const { content, member, guild } = message
-
+    
     if (content.startsWith('!')) {
       const { roles } = member
       const id = Array.from(roles.cache.filter(role => process.env.COMMAND_ROLES.split(',').includes(role.id)).values())
@@ -132,13 +167,30 @@ const messageHandler = (client) => {
               }
             })
    
+          } else if (command === 'expInit') {
+            await Guild.create({
+              guildId: guild.id,
+              config: { guildId: guild.id },
+            })
+          } else if (command === 'experience') {   
+            const user = await getUser(guild.id, member.id)
+            message.channel.send('Your current xp value: ' + user.experience)
+          } else if (command === 'currency') {
+            const user = await getUser(guild.id, member.id)
+            message.channel.send('Your current currency amount: ' + user.currency)
           } else if (command === 'train') {
             // creating dataset for predicting when a user joins the server
             // get channel id
             // get all messages in channel
             // save message id and timestamp to db
             // output console training complete
-          } else {
+          } else if (command === 'wordCount') {
+            const messages = await message.channel.messages.fetch({ limit: 100, force: true})
+            console.log(messages.array().length)
+            message.channel.send(messages.array().length + ' total messages in this channel')
+          } 
+          
+          else {
             
           }
 
@@ -156,6 +208,8 @@ const messageHandler = (client) => {
           }
         }
       }    
+    } else {
+      calculateExperience(message)
     }  
   })
 }
