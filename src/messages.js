@@ -54,12 +54,13 @@ const messageHandler = (client) => {
     if (content.startsWith('!')) {
       const { roles } = member
       const id = Array.from(roles.cache.filter(role => process.env.COMMAND_ROLES.split(',').includes(role.id)).values())
+      
+      let commandPhrase = content.slice(1)
+      commandPhrase = commandPhrase.split(' ')
+      let command 
+      command = commandPhrase[0]
 
       if (id.length > 0) {
-        let commandPhrase = content.slice(1)
-        commandPhrase = commandPhrase.split(' ')
-        let command 
-        command = commandPhrase[0]
         const user = message.mentions.members.first()
         try {
           const existingCommands = await Command.find({guild: guild.id}).exec()
@@ -172,12 +173,6 @@ const messageHandler = (client) => {
               guildId: guild.id,
               config: { guildId: guild.id },
             })
-          } else if (command === 'experience') {   
-            const user = await getUser(guild.id, member.id)
-            message.channel.send('Your current xp value: ' + user.experience)
-          } else if (command === 'currency') {
-            const user = await getUser(guild.id, member.id)
-            message.channel.send('Your current currency amount: ' + user.currency)
           } else if (command === 'train') {
             // creating dataset for predicting when a user joins the server
             // get channel id
@@ -198,7 +193,7 @@ const messageHandler = (client) => {
           console.log(error)
         }
       } else {
-        let command = content.slice(1)
+        // let command = content.slice(1)
         if(command === 'flip') {
           message.delete()
           if(Math.random() >= 0.5) { 
@@ -208,6 +203,16 @@ const messageHandler = (client) => {
           }
         }
       }    
+
+      if (command === 'experience') {   
+        const user = await getUser(guild.id, member.id)
+        message.channel.send(`<@${member.id}>, your current xp is: ` + user.experience)
+      }
+      if (command === 'currency') {
+        const user = await getUser(guild.id, member.id)
+        message.channel.send(`<@${member.id}>, your current currency amount is: ` + user.currency)
+      }
+
     } else {
       calculateExperience(message)
     }  
