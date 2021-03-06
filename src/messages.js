@@ -18,6 +18,40 @@ const getUser = async (guildId, userId) => {
   return user
 }
 
+const updateUser = async (updatedUser) => {
+  const { currency, experience, guildId, userId, action } = updatedUser
+  const guild = await Guild.findOne({ guildId: guildId }).exec()
+  const user = await guild.users.filter((user) => {
+    return user.userId === userId
+  })[0]
+
+  if (action === 'reset') {
+    if(experience === 0) {
+      user.experience = 0
+    }
+    if(currency === 0) {
+      user.currency = 0
+    }
+  } else if(action === 'set') {
+    if(typeof(experience) === 'number') {
+      user.experience = experience
+    }
+    if(typeof(currency) === 'number') {
+      user.currency = currency
+    }
+  } else {
+    if(experience) {
+      user.experience += experience
+    }
+    if(currency) {
+      user.currency += currency
+    }
+  }
+  
+  await guild.save()
+  
+}
+
 const calculateExperience = async (message) => {
   const { content, member, guild } = message
   const words = content.split(' ')
@@ -59,9 +93,9 @@ const messageHandler = (client) => {
       commandPhrase = commandPhrase.split(' ')
       let command 
       command = commandPhrase[0]
-
+      const mentionedUser = message.mentions.members.first()
       if (id.length > 0) {
-        const user = message.mentions.members.first()
+        
         try {
           const existingCommands = await Command.find({guild: guild.id}).exec()
           
@@ -74,13 +108,13 @@ const messageHandler = (client) => {
               if (com.deletable === true) message.delete()
 
               if(com.removeRoles.length > 0 || com.addRoles.length > 0) {
-                const existingRoles = Array.from(user.roles.cache.filter(role => !role.id.includes(com.removeRoles)).values())
-                setRoles(user, existingRoles, com.addRoles)
+                const existingRoles = Array.from(mentionedUser.roles.cache.filter(role => !role.id.includes(com.removeRoles)).values())
+                setRoles(mentionedUser, existingRoles, com.addRoles)
               }
 
               if (com.botResponse !== '')  {
                 let response = com.botResponse
-                response = response.replace("<user>", `<@${user.id}>`)
+                response = response.replace("<mentionedUser>", `<@${mentionedUser.id}>`)
                 message.channel.send(response)
               }  
             }
@@ -183,9 +217,113 @@ const messageHandler = (client) => {
             const messages = await message.channel.messages.fetch({ limit: 100, force: true})
             console.log(messages.array().length)
             message.channel.send(messages.array().length + ' total messages in this channel')
-          } 
+          } else if (command === 'giveExp') {       
+            const expAmount = Number(commandPhrase[2])
+
+            if (commandPhrase.length === 3 &&  typeof(expAmount) === 'number') {
+              const user = {
+                guildId: guild.id,
+                userId: mentionedUser.id,
+                experience: expAmount,
+              }
+
+              await updateUser(user)
+            }
+            
+          } else if (command === 'giveCur') {
+            const curAmount = Number(commandPhrase[2])
+
+            if (commandPhrase.length === 3 &&  typeof(curAmount) === 'number') {
+              const user = {
+                guildId: guild.id,
+                userId: mentionedUser.id,
+                currency: curAmount,
+              }
+
+              await updateUser(user)
+            }
+          } else if (command === 'removeExp') {
+            const expAmount = Number(commandPhrase[2])
+
+            if (commandPhrase.length === 3 &&  typeof(expAmount) === 'number') {
+              const user = {
+                guildId: guild.id,
+                userId: mentionedUser.id,
+                experience: expAmount * -1,
+              }
+
+              await updateUser(user)
+            }
+          } else if (command === 'removeCur') {
+            const curAmount = Number(commandPhrase[2])
+
+            if (commandPhrase.length === 3 &&  typeof(curAmount) === 'number') {
+              const user = {
+                guildId: guild.id,
+                userId: mentionedUser.id,
+                currency: -curAmount,
+              }
+
+              await updateUser(user)
+            }
+          } else if (command === 'resetExp') {
+            const user = {
+              guildId: guild.id,
+              userId: mentionedUser.id,
+              experience: 0,
+              action: 'reset',
+            }
+
+            await updateUser(user)
+          } else if (command === 'resetCur') {
+            const user = {
+              guildId: guild.id,
+              userId: mentionedUser.id,
+              currency: 0,
+              action: 'reset',
+            }
+            await updateUser(user)
+          } else if (command === 'setExp') {
+            const expAmount = Number(commandPhrase[2])
+
+            if (commandPhrase.length === 3 && typeof(expAmount) === 'number') {
+              const user = {
+                guildId: guild.id,
+                userId: mentionedUser.id,
+                experience: expAmount,
+                action: 'set',
+              }
+
+              await updateUser(user)
+            }
+
+          } else if (command === 'setCur') {
+            const curAmount = Number(commandPhrase[2])
+
+            if (commandPhrase.length === 3 && typeof(curAmount) === 'number') {
+              const user = {
+                guildId: guild.id,
+                userId: mentionedUser.id,
+                currency: curAmount,
+                action: 'set',
+              }
+
+              await updateUser(user)
+            }
+          }
           
-          else {
+          else if (command === 'expBoost') {
+            if (commandPhrase[1].toLowerCase() === 'on') {
+              const guildExperience = await Guild.findOne({guildId: guild.id}).exec()
+              guildExperience.config.experienceValue = guildExperience.config.expBoostRate
+              guildExperience.save()
+            }
+            if (commandPhrase[1].toLowerCase() === 'off') {
+              const guildExperience = await Guild.findOne({guildId: guild.id}).exec()
+              guildExperience.config.experienceValue = guildExperience.config.expDefaultRate
+              guildExperience.save()
+            }
+          } else {
             
           }
 
@@ -206,10 +344,49 @@ const messageHandler = (client) => {
       if (command === 'experience' || command === 'exp') {   
         const user = await getUser(guild.id, member.id)
         message.channel.send(`<@${member.id}>, your current xp is: ` + user.experience)
-      }
-      if (command === 'currency') {
+      }else if (command === 'currency') {
         const user = await getUser(guild.id, member.id)
         message.channel.send(`<@${member.id}>, your current currency amount is: ` + user.currency)
+      } else if (command === 'toprank') {
+        const guildExperience = await Guild.findOne({ guildId: guild.id }).exec()
+        const users = guildExperience.users
+        const rank = users.sort((a,b) => {
+          return a.experience - b.experience
+        })
+        rank.reverse()
+        message.channel.send(`<@${rank[0].userId}> is in 1st place with ${rank[0].experience} exp!`)
+      } else if (command === 'rank') {
+        const guildExperience = await Guild.findOne({ guildId: guild.id }).exec()
+        const users = guildExperience.users
+        const rank = users.sort((a,b) => {
+          return a.experience - b.experience
+        })
+        rank.reverse()
+
+        if (commandPhrase.length === 1) {
+          let position
+          rank.forEach((user, index) => {
+             (user.userId === member.id) {
+              position = index
+            }
+          })
+          
+          message.channel.send(`<@${member.id}> is rank ${position+1} with ${rank[position].experience} exp!`)
+        }
+        if (commandPhrase.length === 2) {
+          let position
+          rank.forEach((user, index) => {
+            if (user.userId === mentionedUser.id) {
+              position = index
+            }
+          })
+          
+          message.channel.send(`<@${mentionedUser.id}> is rank ${position+1} with ${rank[position].experience} exp!`)
+        }
+      } 
+      
+      else {
+
       }
 
     } else {
