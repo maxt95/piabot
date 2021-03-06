@@ -193,7 +193,6 @@ const messageHandler = (client) => {
           console.log(error)
         }
       } else {
-        // let command = content.slice(1)
         if(command === 'flip') {
           message.delete()
           if(Math.random() >= 0.5) { 
@@ -204,7 +203,7 @@ const messageHandler = (client) => {
         }
       }    
 
-      if (command === 'experience') {   
+      if (command === 'experience' || command === 'exp') {   
         const user = await getUser(guild.id, member.id)
         message.channel.send(`<@${member.id}>, your current xp is: ` + user.experience)
       }
